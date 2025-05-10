@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.demo.Dtos.Saldo.SaldoProdutoDTO;
 import com.example.demo.Models.Produto;
 import com.example.demo.Services.ProdutoService;
 
@@ -53,4 +54,13 @@ public class ProdutoController {
         return ResponseEntity.ok().body("Produto deletado com sucesso!");
     }
 
+    @GetMapping("/{produtoId}/saldo")
+    public ResponseEntity<SaldoProdutoDTO> getSaldoProduto(@PathVariable Long produtoId) {
+        int saldoAtual = produtoService.calcularSaldoProduto(produtoId);
+        Produto produto = produtoService.obterProdutoPorId(produtoId);
+        SaldoProdutoDTO saldoProdutoDTO = new SaldoProdutoDTO(produto.getNome(), saldoAtual);
+        return ResponseEntity.ok(saldoProdutoDTO);
+    }
 }
+
+

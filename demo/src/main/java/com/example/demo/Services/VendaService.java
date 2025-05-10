@@ -37,6 +37,7 @@ public class VendaService {
     private final ProdutoRepository produtoRepository;
     private final ItemVendaRepository itemVendaRepository;
     private final ReceitaRepository receitaRepository;
+    private final MovimentoEstoqueService movimentoEstoqueService;
 
     @Transactional
     public Venda criarVenda(VendaRequestDTO dto) {
@@ -49,10 +50,8 @@ public class VendaService {
         novaVenda.setDtVenda(dto.getDtVenda());
         novaVenda.setCodigo(dto.getCodigo());
     
-       
         final Venda vendaSalva = vendaRepository.save(novaVenda);
     
-     
         List<ItemVenda> itens = dto.getItemVenda().stream().map(itemDto -> {
             Produto produto = produtoRepository.findById(itemDto.getProdutoId())
                     .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado com ID: " + itemDto.getProdutoId()));
@@ -62,6 +61,10 @@ public class VendaService {
             item.setQuantidade(itemDto.getQuantidade());
             item.setPrecoUnitario(itemDto.getPrecoUnitario());
             item.setVenda(vendaSalva);
+
+            movimentoEstoqueService.registrarSaida(produto.getId(), itemDto.getQuantidade(),
+             "Sainda referente a Venda: " + vendaSalva.getId(), vendaSalva.getCodigo());
+
             return item;
         }).collect(Collectors.toList());
     

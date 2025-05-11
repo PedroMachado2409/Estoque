@@ -51,9 +51,7 @@ public class ProdutoService {
         return produtoEditado;
     }
 
-    public void deletarProduto(Long id) {
-        produtoRepository.deleteById(id);
-    }
+
 
     @Transactional
     public int calcularSaldoProduto(Long produtoId) {

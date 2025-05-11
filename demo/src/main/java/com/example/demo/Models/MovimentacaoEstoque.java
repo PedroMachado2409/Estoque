@@ -32,7 +32,7 @@ public class MovimentacaoEstoque {
     @NotNull
     @Enumerated(EnumType.STRING)
     private TipoMovimentacao tipo;
-
+    
     private String observacao;
 
     private UUID codigo = UUID.randomUUID();

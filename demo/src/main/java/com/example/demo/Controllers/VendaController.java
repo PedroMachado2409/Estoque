@@ -4,7 +4,9 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,6 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.demo.Dtos.Requests.VendaRequestDTO;
 import com.example.demo.Dtos.Responses.VendaResponseDTO;
 import com.example.demo.Services.VendaService;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/vendas")
@@ -30,6 +34,12 @@ public class VendaController {
     @GetMapping
     public List<VendaResponseDTO> listarVendas(){
         return vendaService.listarVendas();
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> excluirVenda(@PathVariable @Valid Long id){
+        vendaService.excluirVenda(id);
+        return ResponseEntity.ok().body("Venda excluida com sucesso !");
     }
 
 

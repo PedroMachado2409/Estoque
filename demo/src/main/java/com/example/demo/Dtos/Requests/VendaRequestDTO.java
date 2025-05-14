@@ -16,8 +16,10 @@ import lombok.Setter;
 @Getter
 public class VendaRequestDTO {
 
+    @NotNull
     private Long clienteId;
     
+    @NotNull
     private List<ItemVendaRequestDTO> itemVenda;
 
     @NotNull

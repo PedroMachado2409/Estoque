@@ -12,8 +12,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.demo.Dtos.Responses.ProdutoMovimentacaoResponseDTO;
 import com.example.demo.Dtos.Saldo.SaldoProdutoDTO;
+import com.example.demo.Models.MovimentacaoEstoque;
 import com.example.demo.Models.Produto;
+import com.example.demo.Services.MovimentoEstoqueService;
 import com.example.demo.Services.ProdutoService;
 
 import jakarta.validation.Valid;
@@ -24,6 +27,9 @@ public class ProdutoController {
     
     @Autowired
     private ProdutoService produtoService;
+
+    @Autowired
+    private MovimentoEstoqueService movimentoEstoqueService;
 
     @GetMapping
     public List<Produto> listarProdutos(){
@@ -54,6 +60,12 @@ public class ProdutoController {
         Produto produto = produtoService.obterProdutoPorId(produtoId);
         SaldoProdutoDTO saldoProdutoDTO = new SaldoProdutoDTO(produto.getNome(), saldoAtual);
         return ResponseEntity.ok(saldoProdutoDTO);
+    }
+
+   @GetMapping("/{produtoId}/movimentacao")
+    public ResponseEntity<List<ProdutoMovimentacaoResponseDTO>> listarMovimentacaoPorProduto(@PathVariable Long produtoId) {
+        List<ProdutoMovimentacaoResponseDTO> movimentacoes = movimentoEstoqueService.movimentacaoPorProduto(produtoId);
+        return ResponseEntity.ok(movimentacoes);
     }
 }
 

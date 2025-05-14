@@ -14,6 +14,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -28,9 +29,11 @@ public class Venda {
     private Long id;
 
     @ManyToOne
+    @NotNull(message = "Cliente é obrigatório")
     private Cliente cliente;
 
     @OneToMany(mappedBy = "venda")
+   
     private List<ItemVenda> itemVenda;
 
     private BigDecimal vlTotal;

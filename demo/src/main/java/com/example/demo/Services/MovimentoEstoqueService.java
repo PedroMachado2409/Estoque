@@ -3,10 +3,12 @@ package com.example.demo.Services;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.demo.Dtos.Responses.ProdutoMovimentacaoResponseDTO;
 import com.example.demo.Enums.TipoMovimentacao;
 import com.example.demo.Models.MovimentacaoEstoque;
 import com.example.demo.Models.Produto;
@@ -53,5 +55,22 @@ public class MovimentoEstoqueService {
         }
 
         return saldo;
+    }
+
+    public List<ProdutoMovimentacaoResponseDTO> movimentacaoPorProduto(Long produtoId ){
+        List<MovimentacaoEstoque> movimentacoes = movimentacaoEstoqueRepository.findByProdutoId(produtoId);
+
+        return movimentacoes.stream().map(mov ->{
+            ProdutoMovimentacaoResponseDTO dto = new ProdutoMovimentacaoResponseDTO();
+            dto.setProdutoId(produtoId);
+            dto.setNomeProduto(mov.getProduto().getNome());
+            dto.setDtMovimentacao(mov.getData());
+            dto.setQuantidade(mov.getQuantidade());
+            dto.setTipo(mov.getTipo());
+            dto.setObservacao(mov.getObservacao());
+            return dto;
+        }).collect(Collectors.toList());
+        
+        
     }
 }

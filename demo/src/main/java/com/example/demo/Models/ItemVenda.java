@@ -9,6 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -23,6 +24,7 @@ public class ItemVenda {
     private Long id;
 
     @ManyToOne
+    @NotNull(message = "pelomenos um produto é obrigatório")
     private Produto produto;
 
     private Integer quantidade;

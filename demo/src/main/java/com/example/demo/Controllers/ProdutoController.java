@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.Dtos.Responses.ProdutoMovimentacaoResponseDTO;
 import com.example.demo.Dtos.Saldo.SaldoProdutoDTO;
-import com.example.demo.Models.MovimentacaoEstoque;
 import com.example.demo.Models.Produto;
 import com.example.demo.Services.MovimentoEstoqueService;
 import com.example.demo.Services.ProdutoService;

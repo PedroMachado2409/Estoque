@@ -1,39 +1,29 @@
 package com.example.demo.Models;
 
-import java.math.BigDecimal;
-import java.util.UUID;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "Receitas")
+@Table(name = "Contas")
 @Getter
 @Setter
-public class Receita {
-
+public class Conta {
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String descricao;
 
-    private BigDecimal vlReceita;
+    private Integer nrConta;
 
-    @ManyToOne
-    private FmPagamento fmPagamento;
+    private String agencia;
 
-    @ManyToOne
-    private Cliente cliente;
-
-    private UUID codigo = UUID.randomUUID();
-
-    private Boolean stBaixado = false;
+    private String banco;
 
 }

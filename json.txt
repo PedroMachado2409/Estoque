@@ -1,0 +1,15 @@
+VENDA
+
+"clienteId": 1,
+  "itemVenda": [
+    {
+      "produtoId": 1243353,
+      "quantidade": 2,
+      "precoUnitario": 200
+    },
+    {
+      "produtoId": 1243354,
+      "quantidade": 1,
+      "precoUnitario": 100
+    }
+  ]

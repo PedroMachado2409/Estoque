@@ -33,10 +33,12 @@ public class Venda {
     private Cliente cliente;
 
     @OneToMany(mappedBy = "venda")
-   
     private List<ItemVenda> itemVenda;
 
     private BigDecimal vlTotal;
+
+    @ManyToOne
+    private FmPagamento fmPagamento;
 
     private UUID codigo = UUID.randomUUID();
 

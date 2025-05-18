@@ -1,7 +1,7 @@
 package com.example.demo.Dtos.Requests;
 
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -19,7 +19,7 @@ public class ClienteRequestDTO {
 
     @NotNull
     @JsonFormat(pattern = "dd/MM/yyyy")
-    private Date dtNascimento;
+    private LocalDate dtNascimento;
 
     @NotNull
     private String cpf;

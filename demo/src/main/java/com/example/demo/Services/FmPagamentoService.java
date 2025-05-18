@@ -22,4 +22,9 @@ public class FmPagamentoService {
         return fmPagamentoRepository.findAll();
     }
 
+    public FmPagamento obterFmPagamentoPorId(Long id){
+        return fmPagamentoRepository.findById(id)
+        .orElseThrow(() -> new RuntimeException("Forma de pagamento não encontrada !"));
+    }
+
 }

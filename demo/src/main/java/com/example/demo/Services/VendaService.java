@@ -4,12 +4,7 @@ import com.example.demo.Dtos.Requests.ItemVendaRequestDTO;
 import com.example.demo.Dtos.Requests.VendaRequestDTO;
 import com.example.demo.Dtos.Responses.ItemVendaResponseDTO;
 import com.example.demo.Dtos.Responses.VendaResponseDTO;
-import com.example.demo.Models.Cliente;
-import com.example.demo.Models.ItemVenda;
-import com.example.demo.Models.MovimentacaoEstoque;
-import com.example.demo.Models.Produto;
-import com.example.demo.Models.Receita;
-import com.example.demo.Models.Venda;
+import com.example.demo.Models.*;
 import com.example.demo.Repositories.*;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -25,141 +20,126 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class VendaService {
 
-    private final MovimentacaoEstoqueRepository movimentacaoEstoqueRepository;
-
     private final VendaRepository vendaRepository;
-    private final ClienteRepository clienteRepository;
-    private final ProdutoRepository produtoRepository;
+    private final ProdutoService produtoService;
     private final ItemVendaRepository itemVendaRepository;
     private final ReceitaRepository receitaRepository;
+    private final MovimentacaoEstoqueRepository movimentacaoEstoqueRepository;
     private final MovimentoEstoqueService movimentoEstoqueService;
-
+    private final ClienteService clienteService;
 
     @Transactional
     public Venda criarVenda(VendaRequestDTO dto) {
+        final Cliente cliente = clienteService.obterClientePorId(dto.getClienteId());
 
-        Cliente cliente = clienteRepository.findById(dto.getClienteId())
-                .orElseThrow(() -> new EntityNotFoundException("Cliente não encontrado com ID: " + dto.getClienteId()));
+        final Venda venda = new Venda();
+        venda.setCliente(cliente);
+        venda.setDtVenda(LocalDate.now());
 
-        Venda novaVenda = new Venda();
-        novaVenda.setCliente(cliente);
-        novaVenda.setDtVenda(dto.getDtVenda());
-        novaVenda.setCodigo(dto.getCodigo());
-        final Venda vendaSalva = vendaRepository.save(novaVenda);
+        final Venda vendaSalva = vendaRepository.save(venda);
 
-        List<ItemVenda> itens = adicionarItensVenda(dto.getItemVenda(), vendaSalva);
-
-        BigDecimal valorTotal = calcularValorTotal(itens);
-
-        vendaSalva.setVlTotal(valorTotal);
-        vendaRepository.save(vendaSalva);
-        gerarReceita(vendaSalva);
-
+        final List<ItemVenda> itens = criarItensVenda(dto.getItemVenda(), vendaSalva);
         itemVendaRepository.saveAll(itens);
+
+        final BigDecimal total = calcularTotalVenda(itens);
+        vendaSalva.setVlTotal(total);
         vendaSalva.setItemVenda(itens);
+        vendaRepository.save(vendaSalva);
+
+        for (ItemVenda item : itens) {
+            criarMovimentacao(item, vendaSalva);
+        }
+
+        gerarReceitaDaVenda(vendaSalva);
 
         return vendaSalva;
-
     }
 
     public List<VendaResponseDTO> listarVendas() {
-        List<Venda> vendas = vendaRepository.findAll();
-
-        return vendas.stream().map(venda -> {
-            VendaResponseDTO dto = new VendaResponseDTO();
-            dto.setId(venda.getId());
-            dto.setVlTotal(venda.getVlTotal());
-            dto.setClienteId(venda.getCliente().getId());
-            dto.setClienteNome(venda.getCliente().getNome());
-            dto.setDtCadastro(LocalDate.now());
-
-            List<ItemVendaResponseDTO> itens = venda.getItemVenda().stream().map(item -> {
-                ItemVendaResponseDTO iDto = new ItemVendaResponseDTO();
-                iDto.setPrecoUnitario(item.getPrecoUnitario());
-                iDto.setProdutoId(item.getProduto().getId());
-                iDto.setProdutoNome(item.getProduto().getNome());
-                iDto.setQuantidade(item.getQuantidade());
-                return iDto;
-
-            }).toList();
-
-            dto.setItens(itens);
-            return dto;
-
-        }).toList();
+        return vendaRepository.findAll().stream()
+                .map(this::toVendaResponseDTO)
+                .collect(Collectors.toList());
     }
 
     @Transactional
     public void excluirVenda(Long vendaId) {
-        Venda vendaExcluida = vendaRepository.findById(vendaId)
-                .orElseThrow(() -> new EntityNotFoundException("Venda não localizada com o ID: " + vendaId));
+        final Venda venda = vendaRepository.findById(vendaId)
+                .orElseThrow(() -> new EntityNotFoundException("Venda não encontrada com ID: " + vendaId));
 
-        Receita receitaVenda = localizarReceitaPorVenda(vendaExcluida);
+        final Receita receita = receitaRepository.findByCodigo(venda.getCodigo()).orElse(null);
 
-        if (receitaVenda != null && Boolean.TRUE.equals(receitaVenda.getStBaixado())) {
-            throw new RuntimeException(
-                    "Receita já baixada (ID: " + (receitaVenda.getId() != null ? receitaVenda.getId() : "N/A")
-                            + "), para excluir a venda, remova a baixa da receita.");
+        if (receita != null && Boolean.TRUE.equals(receita.getStBaixado())) {
+            throw new RuntimeException("Receita já baixada (ID: " + receita.getId()
+                    + "). Remova a baixa da receita antes de excluir a venda.");
         }
 
-        List<ItemVenda> itensDaVenda = localizarOsItensDaVenda(vendaExcluida);
-        itemVendaRepository.deleteAll(itensDaVenda);
+        itemVendaRepository.deleteAll(itemVendaRepository.findByVenda(venda));
+        movimentacaoEstoqueRepository.deleteAll(movimentacaoEstoqueRepository.findByCodigo(venda.getCodigo()));
 
-        List<MovimentacaoEstoque> movimentacoes = localizarMovimentacoesGeradas(vendaExcluida);
-        movimentacaoEstoqueRepository.deleteAll(movimentacoes);
-
-        if (receitaVenda != null) {
-            receitaRepository.deleteById(receitaVenda.getId());
+        if (receita != null) {
+            receitaRepository.deleteById(receita.getId());
         }
+
         vendaRepository.deleteById(vendaId);
     }
 
+    // ----------------- Métodos Privados ------------------
 
-    // ---------- Métodos privados ----------
 
-    private List<ItemVenda> adicionarItensVenda(List<ItemVendaRequestDTO> itensDto, Venda venda) {
-        return itensDto.stream().map(itemDto -> {
-            Produto produto = produtoRepository.findById(itemDto.getProdutoId())
-                    .orElseThrow(() -> new EntityNotFoundException(
-                            "Produto não encontrado com ID: " + itemDto.getProdutoId()));
-
-            ItemVenda item = new ItemVenda();
+    private List<ItemVenda> criarItensVenda(List<ItemVendaRequestDTO> itensDto, Venda venda) {
+        return itensDto.stream().map(dto -> {
+            final Produto produto = produtoService.obterProdutoPorId(dto.getProdutoId());
+            
+            final ItemVenda item = new ItemVenda();
             item.setProduto(produto);
-            item.setQuantidade(itemDto.getQuantidade());
-            item.setPrecoUnitario(itemDto.getPrecoUnitario());
+            item.setQuantidade(dto.getQuantidade());
+            item.setPrecoUnitario(dto.getPrecoUnitario());
             item.setVenda(venda);
 
-            movimentoEstoqueService.registrarSaida(produto.getId(), itemDto.getQuantidade(),
-                    "Saída referente a Venda: " + venda.getId(), venda.getCodigo());
-
+            
             return item;
         }).collect(Collectors.toList());
     }
 
-    private BigDecimal calcularValorTotal(List<ItemVenda> itens) {
+    private void criarMovimentacao(ItemVenda itemVenda, Venda venda) {
+        movimentoEstoqueService.registrarSaida(itemVenda.getProduto().getId(), itemVenda.getQuantidade(),
+                "Movimentação referente a venda: " + venda.getId(), venda.getCodigo());
+    }
+
+    private BigDecimal calcularTotalVenda(List<ItemVenda> itens) {
         return itens.stream()
                 .map(item -> item.getPrecoUnitario().multiply(BigDecimal.valueOf(item.getQuantidade())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    private void gerarReceita(Venda venda) {
-        Receita receita = new Receita();
+    private void gerarReceitaDaVenda(Venda venda) {
+        final Receita receita = new Receita();
         receita.setCodigo(venda.getCodigo());
-        receita.setDescricao("Receita gerada pela venda de código: " + venda.getId());
+        receita.setDescricao("Receita gerada pela venda ID: " + venda.getId());
         receita.setVlReceita(venda.getVlTotal());
         receita.setCliente(venda.getCliente());
+
         receitaRepository.save(receita);
     }
 
-    private Receita localizarReceitaPorVenda(Venda venda) {
-        return receitaRepository.findByCodigo(venda.getCodigo()).orElse(null);
-    }
+    private VendaResponseDTO toVendaResponseDTO(Venda venda) {
+        final VendaResponseDTO dto = new VendaResponseDTO();
+        dto.setId(venda.getId());
+        dto.setVlTotal(venda.getVlTotal());
+        dto.setClienteId(venda.getCliente().getId());
+        dto.setClienteNome(venda.getCliente().getNome());
+        dto.setDtCadastro(venda.getDtVenda());
 
-    private List<ItemVenda> localizarOsItensDaVenda(Venda venda) {
-        return itemVendaRepository.findByVenda(venda);
-    }
+        final List<ItemVendaResponseDTO> itens = venda.getItemVenda().stream().map(item -> {
+            final ItemVendaResponseDTO iDto = new ItemVendaResponseDTO();
+            iDto.setProdutoId(item.getProduto().getId());
+            iDto.setProdutoNome(item.getProduto().getNome());
+            iDto.setPrecoUnitario(item.getPrecoUnitario());
+            iDto.setQuantidade(item.getQuantidade());
+            return iDto;
+        }).collect(Collectors.toList());
 
-    private List<MovimentacaoEstoque> localizarMovimentacoesGeradas(Venda venda){
-        return movimentacaoEstoqueRepository.findByCodigo(venda.getCodigo());
+        dto.setItens(itens);
+        return dto;
     }
 }

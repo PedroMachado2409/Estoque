@@ -1,8 +1,7 @@
 package com.example.demo.Models;
 
-import java.math.BigDecimal;
+
 import java.time.LocalDate;
-import java.util.List;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -11,39 +10,36 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
+@Table(name = "Fornecedores")
 @Entity
-@Table(name = "Vendas")
 @Getter
 @Setter
-public class Venda {
+public class Fornecedor {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @NotNull(message = "Cliente é obrigatório")
-    private Cliente cliente;
+    @NotNull(message = "nome é obrigatório")
+    private String nome;
 
-    @OneToMany(mappedBy = "venda")
-    private List<ItemVenda> itemVenda;
+    @NotNull(message = "cpf é obrigatório")
+    private String cpf;
+    
+    @NotNull(message = "telefone é obrigatório")
+    private String telefone;
 
-    private BigDecimal vlTotal;
-
-    @ManyToOne
-    @NotNull(message = "Forma de Pagamento é obrigatório")
-    private FmPagamento fmPagamento;
+    @JsonFormat(pattern = "dd/MM/yyyy")
+    private LocalDate dtCadastro = LocalDate.now();
 
     private UUID codigo = UUID.randomUUID();
 
-    @JsonFormat(pattern = "dd/MM/yyyy")
-    private LocalDate dtVenda;
+    private String observacao;
+
 
 }

@@ -1,13 +1,13 @@
 package com.example.demo.Models;
 
 import java.time.LocalDate;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -33,10 +33,11 @@ public class Cliente {
 
     @NotNull(message = "Data de Nascimento é obrigatório")
     @JsonFormat(pattern = "dd/MM/yyyy")
-    private Date dtNascimento;
+    private LocalDate dtNascimento;
 
-    @NotNull(message = "Cpf é obrigatório")
-    private String Cpf;
+    @NotNull(message = "Cpf é obrigatório" )
+    @Column(unique = true, nullable = false)
+    private String cpf;
 
     private String observacao;
 

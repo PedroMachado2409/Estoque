@@ -1,7 +1,6 @@
 package com.example.demo.Models;
 
 import java.math.BigDecimal;
-import java.util.UUID;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -12,31 +11,25 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
+@Table(name = "ItemCompra")
 @Entity
-@Table(name = "Receitas")
 @Getter
 @Setter
-public class Receita {
-
+public class ItemCompra {
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String descricao;
-
-    private BigDecimal vlReceita;
-
     @ManyToOne
-    private FmPagamento fmPagamento;
+    private Produto produto;
 
-    @ManyToOne
-    private Cliente cliente;
-
-    private UUID codigo = UUID.randomUUID();
-
-    private Boolean stBaixado = false;
     
+    private Integer quantidade;
+
+    private BigDecimal precoUnitario;
+
     @ManyToOne
-    private Conta contaBaixada;
+    private Compra compra;
 
 }

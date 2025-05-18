@@ -41,6 +41,21 @@ public class MovimentoEstoqueService {
         movimentacaoEstoqueRepository.save(movimentacao);
     }
 
+     public void registrarEntrada(Long produtoId, Integer quantidade, String observacao, UUID codigo) {
+        Produto produto = produtoRepository.findById(produtoId)
+                .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado com ID: " + produtoId));
+
+        MovimentacaoEstoque movimentacao = new MovimentacaoEstoque();
+        movimentacao.setProduto(produto);
+        movimentacao.setData(LocalDate.now());
+        movimentacao.setQuantidade(+Math.abs(quantidade));
+        movimentacao.setTipo(TipoMovimentacao.ENTRADA);
+        movimentacao.setObservacao(observacao);
+        movimentacao.setCodigo(codigo);
+
+        movimentacaoEstoqueRepository.save(movimentacao);
+    }
+
     public int calcularSaldoProduto(Long produtoId) {
         List<MovimentacaoEstoque> movimentacoes = movimentacaoEstoqueRepository.findByProdutoId(produtoId);
         

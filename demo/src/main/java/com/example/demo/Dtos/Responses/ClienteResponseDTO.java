@@ -16,7 +16,7 @@ public class ClienteResponseDTO {
     private String cpf;
 
     @JsonFormat(pattern = "dd/MM/yyyy")
-    private Date dtNascimento;
+    private LocalDate dtNascimento;
     
     @JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDate dtCadastro;

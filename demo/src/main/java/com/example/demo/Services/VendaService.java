@@ -3,7 +3,9 @@ package com.example.demo.Services;
 import com.example.demo.Dtos.Requests.ItemVendaRequestDTO;
 import com.example.demo.Dtos.Requests.VendaRequestDTO;
 import com.example.demo.Dtos.Responses.ItemVendaResponseDTO;
+import com.example.demo.Dtos.Responses.ProdutoClienteQuantidadeDTO;
 import com.example.demo.Dtos.Responses.VendaResponseDTO;
+import com.example.demo.Enums.TipoMovimentacao;
 import com.example.demo.Models.*;
 import com.example.demo.Repositories.*;
 import jakarta.persistence.EntityNotFoundException;
@@ -13,7 +15,10 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -103,7 +108,7 @@ public class VendaService {
 
     private void criarMovimentacao(ItemVenda itemVenda, Venda venda) {
         movimentoEstoqueService.registrarSaida(itemVenda.getProduto().getId(), itemVenda.getQuantidade(),
-                "Movimentação referente a venda: " + venda.getId(), venda.getCodigo());
+                "Movimentação referente a venda: " + venda.getId(), venda.getCodigo(), venda.getCliente());
     }
 
     private BigDecimal calcularTotalVenda(List<ItemVenda> itens) {
@@ -142,4 +147,6 @@ public class VendaService {
         dto.setItens(itens);
         return dto;
     }
+
+
 }

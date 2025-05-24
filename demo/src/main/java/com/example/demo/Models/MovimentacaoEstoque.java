@@ -36,4 +36,11 @@ public class MovimentacaoEstoque {
     private String observacao;
 
     private UUID codigo = UUID.randomUUID();
+
+    @ManyToOne(optional = true) 
+    private Cliente cliente;
+
+    @ManyToOne(optional = true)
+    private Fornecedor fornecedor;
+
 }

@@ -13,3 +13,24 @@ VENDA
       "precoUnitario": 100
     }
   ]
+
+
+	COMPRAS
+
+{
+  "fornecedorId": 1,
+  "fmPagamentoId": 1,
+  "observacao":"Compra de produtos de limpeza",
+  "itensCompra": [
+    {
+      "produtoId": 1243353,
+      "quantidade": 5,
+      "precoUnitario": 19.99
+    },
+    {
+      "produtoId": 1243354,
+      "quantidade": 2,
+      "precoUnitario": 99.95
+    }
+  ]
+}

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.demo.Dtos.Responses.ProdutoClienteQuantidadeDTO;
 import com.example.demo.Dtos.Responses.ProdutoMovimentacaoResponseDTO;
 import com.example.demo.Dtos.Saldo.SaldoProdutoDTO;
 import com.example.demo.Models.Produto;
@@ -23,7 +24,7 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/api/produto")
 public class ProdutoController {
-    
+
     @Autowired
     private ProdutoService produtoService;
 
@@ -31,27 +32,26 @@ public class ProdutoController {
     private MovimentoEstoqueService movimentoEstoqueService;
 
     @GetMapping
-    public List<Produto> listarProdutos(){
+    public List<Produto> listarProdutos() {
         return produtoService.listarProdutos();
     }
 
     @PostMapping
-    public ResponseEntity<?> cadastrarProdutos(@RequestBody @Valid Produto produto){
+    public ResponseEntity<?> cadastrarProdutos(@RequestBody @Valid Produto produto) {
         produtoService.cadastrarProduto(produto);
         return ResponseEntity.ok().body("Produto Cadastrado com Sucesso");
     }
 
     @GetMapping("/{id}")
-    public Produto obterProdutoPorId(@PathVariable Long id){
+    public Produto obterProdutoPorId(@PathVariable Long id) {
         return produtoService.obterProdutoPorId(id);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> EditarProduto(@PathVariable Long id, @RequestBody Produto produtoEditado){
+    public ResponseEntity<Produto> EditarProduto(@PathVariable Long id, @RequestBody Produto produtoEditado) {
         produtoService.editarProduto(id, produtoEditado);
-        return ResponseEntity.ok().body("Produto editado com sucesso !");
+        return ResponseEntity.ok(produtoEditado);
     }
-
 
     @GetMapping("/{produtoId}/saldo")
     public ResponseEntity<SaldoProdutoDTO> getSaldoProduto(@PathVariable Long produtoId) {
@@ -61,11 +61,17 @@ public class ProdutoController {
         return ResponseEntity.ok(saldoProdutoDTO);
     }
 
-   @GetMapping("/{produtoId}/movimentacao")
-    public ResponseEntity<List<ProdutoMovimentacaoResponseDTO>> listarMovimentacaoPorProduto(@PathVariable Long produtoId) {
+    @GetMapping("/{produtoId}/movimentacao")
+    public ResponseEntity<List<ProdutoMovimentacaoResponseDTO>> listarMovimentacaoPorProduto(
+            @PathVariable Long produtoId) {
         List<ProdutoMovimentacaoResponseDTO> movimentacoes = movimentoEstoqueService.movimentacaoPorProduto(produtoId);
         return ResponseEntity.ok(movimentacoes);
     }
+
+    @GetMapping("/{produtoId}/clientes")
+    public ResponseEntity<List<ProdutoClienteQuantidadeDTO>> clientesQueMaisCompraram(@PathVariable Long produtoId) {
+        List<ProdutoClienteQuantidadeDTO> resultado = movimentoEstoqueService
+                .movimentacaoPorProdutoAgrupadoPorCliente(produtoId);
+        return ResponseEntity.ok(resultado);
+    }
 }
-
-

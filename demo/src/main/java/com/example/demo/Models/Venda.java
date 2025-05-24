@@ -38,7 +38,7 @@ public class Venda {
     private BigDecimal vlTotal;
 
     @ManyToOne
-    @NotNull(message = "Forma de Pagamento é obrigatório")
+    // @NotNull(message = "Forma de Pagamento é obrigatório")
     private FmPagamento fmPagamento;
 
     private UUID codigo = UUID.randomUUID();

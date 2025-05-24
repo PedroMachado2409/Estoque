@@ -1,15 +1,20 @@
 package com.example.demo.Services;
 
 import java.time.LocalDate;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.demo.Dtos.Responses.ProdutoClienteQuantidadeDTO;
 import com.example.demo.Dtos.Responses.ProdutoMovimentacaoResponseDTO;
 import com.example.demo.Enums.TipoMovimentacao;
+import com.example.demo.Models.Cliente;
 import com.example.demo.Models.MovimentacaoEstoque;
 import com.example.demo.Models.Produto;
 import com.example.demo.Repositories.MovimentacaoEstoqueRepository;
@@ -26,12 +31,13 @@ public class MovimentoEstoqueService {
     @Autowired
     private ProdutoRepository produtoRepository;
 
-    public void registrarSaida(Long produtoId, Integer quantidade, String observacao, UUID codigo) {
+    public void registrarSaida(Long produtoId, Integer quantidade, String observacao, UUID codigo, Cliente cliente) {
         Produto produto = produtoRepository.findById(produtoId)
                 .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado com ID: " + produtoId));
 
         MovimentacaoEstoque movimentacao = new MovimentacaoEstoque();
         movimentacao.setProduto(produto);
+        movimentacao.setCliente(cliente);
         movimentacao.setData(LocalDate.now());
         movimentacao.setQuantidade(-Math.abs(quantidade));
         movimentacao.setTipo(TipoMovimentacao.SAIDA);
@@ -41,7 +47,7 @@ public class MovimentoEstoqueService {
         movimentacaoEstoqueRepository.save(movimentacao);
     }
 
-     public void registrarEntrada(Long produtoId, Integer quantidade, String observacao, UUID codigo) {
+    public void registrarEntrada(Long produtoId, Integer quantidade, String observacao, UUID codigo) {
         Produto produto = produtoRepository.findById(produtoId)
                 .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado com ID: " + produtoId));
 
@@ -58,7 +64,7 @@ public class MovimentoEstoqueService {
 
     public int calcularSaldoProduto(Long produtoId) {
         List<MovimentacaoEstoque> movimentacoes = movimentacaoEstoqueRepository.findByProdutoId(produtoId);
-        
+
         int saldo = 0;
 
         for (MovimentacaoEstoque movimentacao : movimentacoes) {
@@ -72,10 +78,10 @@ public class MovimentoEstoqueService {
         return saldo;
     }
 
-    public List<ProdutoMovimentacaoResponseDTO> movimentacaoPorProduto(Long produtoId ){
+    public List<ProdutoMovimentacaoResponseDTO> movimentacaoPorProduto(Long produtoId) {
         List<MovimentacaoEstoque> movimentacoes = movimentacaoEstoqueRepository.findByProdutoId(produtoId);
 
-        return movimentacoes.stream().map(mov ->{
+        return movimentacoes.stream().map(mov -> {
             ProdutoMovimentacaoResponseDTO dto = new ProdutoMovimentacaoResponseDTO();
             dto.setProdutoId(produtoId);
             dto.setNomeProduto(mov.getProduto().getNome());
@@ -85,7 +91,38 @@ public class MovimentoEstoqueService {
             dto.setObservacao(mov.getObservacao());
             return dto;
         }).collect(Collectors.toList());
-        
-        
+    }
+
+    public List<ProdutoClienteQuantidadeDTO> movimentacaoPorProdutoAgrupadoPorCliente(Long produtoId) {
+        List<MovimentacaoEstoque> movimentacoes = movimentacaoEstoqueRepository.findByProdutoIdAndTipo(produtoId,
+                TipoMovimentacao.SAIDA);
+
+        Map<Long, ProdutoClienteQuantidadeDTO> agrupado = new HashMap<>();
+
+        for (MovimentacaoEstoque mov : movimentacoes) {
+            if (mov.getCliente() == null)
+                continue;
+
+            Long clienteId = mov.getCliente().getId();
+
+            agrupado.compute(clienteId, (id, dto) -> {
+                if (dto == null) {
+                    ProdutoClienteQuantidadeDTO novo = new ProdutoClienteQuantidadeDTO();
+                    novo.setClienteId(clienteId);
+                    novo.setNomeCliente(mov.getCliente().getNome());
+                    novo.setProdutoId(produtoId);
+                    novo.setNomeProduto(mov.getProduto().getNome());
+                    novo.setQuantidadeTotal(Math.abs(mov.getQuantidade()));
+                    return novo;
+                } else {
+                    dto.setQuantidadeTotal(dto.getQuantidadeTotal() + Math.abs(mov.getQuantidade()));
+                    return dto;
+                }
+            });
+        }
+
+        return agrupado.values().stream()
+                .sorted(Comparator.comparingInt(ProdutoClienteQuantidadeDTO::getQuantidadeTotal).reversed())
+                .collect(Collectors.toList());
     }
 }

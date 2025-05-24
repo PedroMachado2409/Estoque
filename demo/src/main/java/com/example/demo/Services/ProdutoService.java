@@ -48,6 +48,8 @@ public class ProdutoService {
         produtoEditado.setPreco(produto.getPreco());
         produtoEditado.setUnidade(produto.getUnidade());
 
+        produtoRepository.save(produtoEditado);
+
         return produtoEditado;
     }
 

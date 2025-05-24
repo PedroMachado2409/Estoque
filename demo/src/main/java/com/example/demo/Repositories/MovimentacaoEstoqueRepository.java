@@ -1,6 +1,7 @@
 package com.example.demo.Repositories;
 
 
+import com.example.demo.Enums.TipoMovimentacao;
 import com.example.demo.Models.MovimentacaoEstoque;
 
 
@@ -16,4 +17,6 @@ public interface MovimentacaoEstoqueRepository extends JpaRepository<Movimentaca
     List<MovimentacaoEstoque> findByProdutoId (Long produtoId);
     
     List<MovimentacaoEstoque> findByCodigo(UUID codigo);
+
+    List<MovimentacaoEstoque> findByProdutoIdAndTipo(Long produtoId, TipoMovimentacao tipo);
 }
